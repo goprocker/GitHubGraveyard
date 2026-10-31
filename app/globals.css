@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night: #12162b;
+  --color-dusk: #1e2442;
+  --color-moon: #c8d8ff;
+  --color-bone: #f0e6cc;
+  --color-lichen: #a8a58f;
+  --color-lantern: #e8b45a;
+  --color-spectral: #73d7ff;
+  --font-sans: var(--font-ui);
+  --font-serif: var(--font-display);
+}
+
+html,
+body {
+  background: var(--color-night);
+  color: var(--color-bone);
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-spectral);
+  outline-offset: 2px;
+}
+
+/* A slab of dark slate: the one surface used by all floating UI. */
+.slab {
+  background: rgb(18 22 43 / 0.9);
+  border: 1px solid rgb(168 165 143 / 0.35);
+  border-top: 3px solid rgb(168 165 143 / 0.6);
+  border-radius: 3px;
+  backdrop-filter: blur(6px);
+}
+
+.control {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgb(168 165 143 / 0.35);
+  border-radius: 3px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.925rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.control:hover {
+  border-color: var(--color-spectral);
+}
+
+.control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control[aria-pressed="true"] {
+  background: rgb(200 216 255 / 0.16);
+  border-color: var(--color-moon);
+}
+
+/* Carved lettering: a dark cut with light catching its lower edge. */
+.carved {
+  color: #23263a;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
+}
+
+.intro-fade {
+  animation: intro-fade 0.6s ease-out both;
+}
+
+.hud-fade {
+  transition: opacity 1s ease;
+}
+
+@keyframes intro-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lantern-sway {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+
+.lantern-sway {
+  transform-origin: top center;
+  animation: lantern-sway 1.6s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-fade,
+  .lantern-sway {
+    animation: none;
+  }
+  .hud-fade {
+    transition: none;
+  }
+}
