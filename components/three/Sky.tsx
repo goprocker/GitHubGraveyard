@@ -24,7 +24,7 @@ const SKY_FRAGMENT = /* glsl */ `
   varying vec3 vDirection;
   void main() {
     float h = clamp(vDirection.y, 0.0, 1.0);
-    vec3 horizon = vec3(0.17, 0.21, 0.40);
+    vec3 horizon = vec3(0.24, 0.30, 0.50);
     vec3 middle = vec3(0.06, 0.08, 0.20);
     vec3 zenith = vec3(0.015, 0.02, 0.07);
     vec3 color = mix(horizon, middle, smoothstep(0.0, 0.22, h));
@@ -33,7 +33,7 @@ const SKY_FRAGMENT = /* glsl */ `
   }
 `;
 
-const MOON_POSITION: [number, number, number] = [-110, 135, -300];
+const MOON_POSITION: [number, number, number] = [-70, 85, -300];
 
 function haloTexture(): CanvasTexture {
   const canvas = document.createElement("canvas");
@@ -152,10 +152,10 @@ export function Sky() {
         <pointsMaterial color="#DCE6FF" size={1.3} sizeAttenuation={false} fog={false} transparent opacity={0.85} />
       </points>
       <mesh position={MOON_POSITION} raycast={() => null}>
-        <circleGeometry args={[17, 40]} />
+        <circleGeometry args={[26, 48]} />
         <meshBasicMaterial map={moon} fog={false} toneMapped={false} />
       </mesh>
-      <sprite position={MOON_POSITION} scale={[180, 180, 1]} raycast={() => null}>
+      <sprite position={MOON_POSITION} scale={[300, 300, 1]} raycast={() => null}>
         <spriteMaterial map={halo} blending={AdditiveBlending} depthWrite={false} depthTest={false} fog={false} transparent />
       </sprite>
       <mesh geometry={farHills} raycast={() => null}>

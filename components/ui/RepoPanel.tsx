@@ -48,17 +48,20 @@ export function RepoPanel({ repos, sceneActive, isRendered }: RepoPanelProps) {
       className="slab pointer-events-auto absolute inset-x-2 bottom-2 z-30 max-h-[58dvh] overflow-y-auto p-4 md:inset-x-auto md:top-16 md:right-3 md:bottom-auto md:max-h-[calc(100dvh-5rem)] md:w-96"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="break-words font-serif text-3xl leading-tight">{repo.name}</h2>
-        <button ref={closeRef} type="button" className="control shrink-0" onClick={() => select(null)}>
+        <h2 className="break-words font-serif text-4xl leading-none font-semibold">{repo.name}</h2>
+        <button ref={closeRef} type="button" className="control shrink-0 px-2.5" onClick={() => select(null)}>
           <X aria-hidden="true" size={16} />
           <span className="sr-only">Close details</span>
         </button>
       </div>
 
-      <p className="mt-1 font-bold" style={{ color: STATUS_COLORS[repo.status] }}>
+      <p className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: STATUS_COLORS[repo.status] }}>
+        <span aria-hidden="true" className="size-2 rounded-full" style={{ background: STATUS_COLORS[repo.status] }} />
         {STATUS_LABELS[repo.status]}, pushed {formatInactivity(repo.inactiveDays)}
       </p>
-      <p className="mt-3 font-serif text-xl italic leading-snug">&ldquo;{repo.epitaph}&rdquo;</p>
+      <p className="mt-4 border-l-2 border-lantern/60 pl-3 font-serif text-2xl italic leading-snug">
+        &ldquo;{repo.epitaph}&rdquo;
+      </p>
       {repo.description && <p className="mt-3 leading-relaxed text-bone/90">{repo.description}</p>}
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -79,6 +82,10 @@ export function RepoPanel({ repos, sceneActive, isRendered }: RepoPanelProps) {
           <dd>{TIER_LABELS[repo.tier]}</dd>
         </div>
         <div>
+          <dt className="text-lichen">Visibility</dt>
+          <dd>{repo.private ? "Private" : "Public"}</dd>
+        </div>
+        <div>
           <dt className="text-lichen">Created</dt>
           <dd>{formatDate(repo.createdAt)}</dd>
         </div>
@@ -97,7 +104,7 @@ export function RepoPanel({ repos, sceneActive, isRendered }: RepoPanelProps) {
 
       <div className="mt-4 flex flex-wrap gap-2">
         {repo.htmlUrl && (
-          <a className="control" href={repo.htmlUrl} target="_blank" rel="noopener noreferrer">
+          <a className="control control-primary" href={repo.htmlUrl} target="_blank" rel="noopener noreferrer">
             <ExternalLink aria-hidden="true" size={16} />
             Open on GitHub
           </a>
@@ -105,7 +112,7 @@ export function RepoPanel({ repos, sceneActive, isRendered }: RepoPanelProps) {
         {canResurrect && (
           <button
             type="button"
-            className="control"
+            className="control border-bone/25"
             disabled={resurrectingId !== null}
             onClick={() => startResurrection(repo.id)}
           >

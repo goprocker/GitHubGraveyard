@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Alegreya_Sans, IM_Fell_English } from "next/font/google";
+import { Cormorant_Garamond, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const display = IM_Fell_English({
+const display = Cormorant_Garamond({
   variable: "--font-display",
-  weight: "400",
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
-const ui = Alegreya_Sans({
+const ui = Hanken_Grotesk({
   variable: "--font-ui",
   weight: ["400", "500", "700"],
   subsets: ["latin"],
@@ -16,7 +17,8 @@ const ui = Alegreya_Sans({
 
 export const metadata: Metadata = {
   title: "GitHub Graveyard",
-  description: "Walk through a 3D cemetery built from anyone's public GitHub repositories.",
+  description: "A private 3D cemetery of my GitHub repositories.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

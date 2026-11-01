@@ -1,12 +1,14 @@
 # GitHub Graveyard
 
-Enter a GitHub username and walk through a 3D cemetery of that account's public repositories. Long-untouched repositories become mossy, cracked graves. Starred ones get grander monuments.
-
-Try `/demo` for a sample cemetery of invented repositories.
+A private 3D cemetery of my own GitHub repositories, public and private. Long-untouched repositories become mossy, cracked graves. Starred ones get grander monuments.
 
 ## Setup
 
 Requires Node 24.
+
+1. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new) with your account as owner, **All repositories**, and **Metadata: Read-only**.
+2. Copy `.env.example` to `.env.local` and fill it in. `.env.local` is ignored by git.
+3. Run:
 
 ```bash
 npm install
@@ -19,8 +21,9 @@ Then open http://localhost:3000.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `GITHUB_TOKEN` | No | Raises the GitHub limit from 60 to 5,000 requests an hour. Read only on the server. No scopes are needed for public data. |
-| `NEXT_PUBLIC_E2E` | No | Tests only. Set by the Playwright config to expose a test hook. Leave it unset in production. |
+| `GITHUB_TOKEN` | Yes | Decides whose repositories appear. Read only on the server. |
+| `GRAVEYARD_PASSWORD` | In production | Protects every route. The browser asks for it, and any username works. Production returns 503 if it is unset. |
+| `NEXT_PUBLIC_E2E` | No | Tests only. Set by the Playwright config. Leave it unset in production. |
 
 ## How graves are classified
 
@@ -40,13 +43,14 @@ Marker size comes from stars: gravestone (0 to 4), decorative (5 to 19), elabora
 
 ## Architecture
 
-- `app/api/github/[username]/route.ts`: server-side GitHub proxy. It validates the username, allowlists response fields and never sends the token to the browser.
-- `lib/github/`: GitHub client, field sanitizing, error types and an in-memory LRU cache.
+- `proxy.ts`: password gate for every route.
+- `app/api/graveyard/route.ts`: server-side GitHub proxy. It allowlists response fields, forbids shared caching and never sends the token to the browser.
+- `lib/github/`: GitHub client, field sanitizing, error types and a 10-minute in-memory cache.
 - `lib/`: pure logic for classification, filtering, seeded layout, terrain and epitaphs, plus the UI store.
 - `components/three/`: the React Three Fiber scene, lazy-loaded on the client.
 - `components/ui/`: landing page, HUD, repository list and details panel. The list is also the keyboard path into the scene and the fallback when WebGL isn't available.
 
-The same username and repositories always produce the same layout. `decisions.md` records why each choice was made.
+The same account and repositories always produce the same layout. `decisions.md` records why each choice was made.
 
 ## Checks
 
@@ -57,27 +61,26 @@ npm test
 npm run test:e2e   # Run `npx playwright install chromium` first
 ```
 
-To capture review screenshots, set `SHOT_DIR` to a folder before running `npm run test:e2e`.
-
 ## Limitations
 
-- Public repositories only, and at most 500 per account.
+- Only repositories you own, at most 500. Organisation repositories are left out.
+- Deploy only over HTTPS, because the password gate uses HTTP Basic auth.
 - The 3D scene shows at most 100 graves, chosen by stars and then recent pushes. The list shows every fetched repository.
 - The cache is per server instance, so it resets on restart and isn't shared across instances.
-- There is no per-IP rate limiting, so visitors share the server's GitHub quota.
+- The password gate has no lockout after failed attempts, so use a long password.
 - Demo Resurrection is only a visual effect for the current visit. It changes nothing on GitHub and doesn't detect real revivals.
 - Frame rate hasn't been measured on real GPUs. Automated tests use software rendering.
 
 ## Deployment
 
-**Vercel:** import the repository and optionally set `GITHUB_TOKEN`. No other configuration is needed.
+**Vercel:** import the repository and set `GITHUB_TOKEN` and `GRAVEYARD_PASSWORD`.
 
 **Any Node host:**
 
 ```bash
 npm ci
 npm run build
-GITHUB_TOKEN=your_token npm start
+GITHUB_TOKEN=your_token GRAVEYARD_PASSWORD=your_password npm start
 ```
 
 The server listens on port 3000 unless you set `PORT`.

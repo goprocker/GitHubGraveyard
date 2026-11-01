@@ -18,9 +18,9 @@ function buildGround(): PlaneGeometry {
   const position = geometry.attributes.position;
   if (!position) return geometry;
   const random = createRandom(31);
-  const grass = new Color("#35482F");
-  const paleGrass = new Color("#4A5B3C");
-  const dirt = new Color("#6B5842");
+  const grass = new Color("#26382F");
+  const paleGrass = new Color("#394D45");
+  const dirt = new Color("#7A6A58");
   const color = new Color();
   const colors: number[] = [];
 

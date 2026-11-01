@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "GitHub Graveyard: a 3D cemetery built from public GitHub repositories";
+export const alt = "GitHub Graveyard: a private 3D cemetery of my GitHub repositories";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

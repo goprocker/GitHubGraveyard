@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Lock, Star } from "lucide-react";
 
 import { formatInactivity, STATUS_COLORS, STATUS_LABELS } from "@/lib/classify";
 import { useGraveyard } from "@/lib/store";
@@ -21,9 +21,17 @@ export function RepoList({ repos }: { repos: readonly EnrichedRepo[] }) {
           <button
             type="button"
             onClick={() => select(repo.id)}
-            className="w-full cursor-pointer px-3 py-2.5 text-left hover:bg-moon/10"
+            className="w-full cursor-pointer px-4 py-3 text-left hover:bg-bone/[0.06]"
           >
-            <span className="block break-words font-serif text-lg leading-tight">{repo.name}</span>
+            <span className="flex items-center gap-1.5 break-words font-serif text-xl leading-tight font-semibold">
+              {repo.name}
+              {repo.private && (
+                <>
+                  <Lock aria-hidden="true" size={13} />
+                  <span className="sr-only">Private</span>
+                </>
+              )}
+            </span>
             <span className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-lichen">
               <span style={{ color: STATUS_COLORS[repo.status] }}>{STATUS_LABELS[repo.status]}</span>
               <span>pushed {formatInactivity(repo.inactiveDays)}</span>

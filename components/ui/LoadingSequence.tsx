@@ -1,4 +1,4 @@
-export function LoadingSequence({ username }: { username: string }) {
+export function LoadingSequence() {
   return (
     <main
       role="status"
@@ -8,7 +8,7 @@ export function LoadingSequence({ username }: { username: string }) {
         <path d="M20 0V14" stroke="#a8a58f" strokeWidth="2" />
         <path d="M11 20 20 13 29 20V46L25 52H15L11 46Z" fill="#e8b45a" stroke="#a8a58f" strokeWidth="2" />
       </svg>
-      <p className="font-serif text-2xl">Reading the headstones for {username}</p>
+      <p className="font-serif text-3xl italic">Reading your headstones</p>
     </main>
   );
 }

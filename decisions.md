@@ -138,3 +138,71 @@ A running log of meaningful changes: what changed, why this approach, and why th
 
 **Why over alternatives:** One point cloud for glows costs a single draw call, where one light per grave would cost shader time on every surface and quickly hurt frame rate. A bloom pass would need a new dependency and more GPU time on every frame, and the plan ruled it out.
 
+## 15. Single-owner mode with private repositories
+
+**What changed:** The app now shows only the token owner's repositories, public and private, from `GET /user/repos`. Removed username search, `/demo` and the public `/api/github/[username]` route. Added `/graveyard`, `/api/graveyard`, a password gate in `proxy.ts`, and private labels in the list and panel.
+
+**Why this approach:** The owner asked for this to be for their account alone. Showing private repositories on an open URL would leak their names and descriptions, so every route requires `GRAVEYARD_PASSWORD`, and production refuses to serve if it is unset. API responses use `private, no-store` so a CDN can't store them, replacing the earlier `s-maxage`.
+
+**Why over alternatives:**
+- **HTTP Basic auth** rather than GitHub OAuth, which would need an OAuth app, sessions and callback handling for a single user. Basic auth is only safe over HTTPS, which hosts like Vercel provide.
+- **A fine-grained, read-only token** rather than a classic `repo` token, which would also grant write access to code.
+- **`affiliation=owner`** so organisation and collaborator repositories stay out.
+
+## 16. Decode Basic auth credentials as UTF-8
+
+**What changed:** `proxy.ts` now decodes the credentials as UTF-8 after `atob`. Added `tests/unit/proxy.test.ts` for the password gate.
+
+**Why this approach:** `atob` returns one character per byte, so a non-ASCII password never matched and locked the owner out.
+
+**Why over alternatives:** `TextDecoder` is available in the proxy runtime and needs no dependency. Documenting an ASCII-only password rule would leave a confusing failure for anyone who missed it.
+
+## 17. UI redesign: epitaph landing and quieter glass controls
+
+**What changed:** Landing page now sets one large italic epitaph ("Here lies everything I meant to finish.") directly on the night sky, left-aligned above the fence, with a single dawn fade-in. The arched stone slab with a form was removed. Fonts changed from IM Fell English and Alegreya Sans to Cormorant Garamond and Hanken Grotesk. Floating UI went from squared slate slabs with a thick top border to rounded dark glass with a hairline, pill controls, and one filled lantern-amber primary button. Cyan focus and hover accent became lantern amber. The repo panel gained a status dot and a ruled epitaph quote. Error and empty states reuse the landing's inscription style.
+
+**Why this approach:** The old landing looked like a form in a box and the HUD was heavy and uniform. The headline now carries the personality, and the controls recede so the 3D scene leads.
+
+**Why over alternatives:** Kept the existing colour token names so the three.js scene and tests need no changes. Used one entrance animation rather than per-section motion. Cormorant is a lighter, more refined serif than IM Fell, which read as costume lettering at large sizes.
+
+**Not yet verified:** Visual check in a browser; only typecheck and lint were run.
+
+## 18. Scene art direction pass and carried lantern
+
+**What changed:** Moon is larger and lower so it shows in the gate shot, with a wider halo and a brighter horizon. Ground colours are cooler and darker so the stones and path stand out, and ground mist is denser. Added `PathLanterns` (instanced iron posts, lamps and an additive glow cloud along the path, with a flicker) and `CursorLantern` (a warm point light and glow that follows the cursor across the ground once the intro ends). The hover and selection ring and light changed from cyan to lantern amber.
+
+**Why this approach:** Reference images of moonlit graveyards share a big haloed moon, low mist and small warm lights against cool blue. The cursor lantern makes the scene respond to every mouse movement, not just to clicks.
+
+**Why over alternatives:** Instanced posts and one points cloud add three draw calls, so the budget tests should still pass. One point light follows the cursor instead of one per lantern, which would cost shader time on every surface. The cursor position comes from intersecting the ray with a flat plane rather than raycasting the terrain, because terrain raycasting is switched off for speed.
+
+**Not yet verified:** The draw call budget tests (`tests/e2e/budget.spec.ts`) were not run. Frame rate on a real GPU is unmeasured.
+
+## 19. Compact explore bar
+
+**What changed:** The explore bar is one row instead of two. Search, status filters, Forks and Show list stay as labelled pills. Reset camera, Home view, Quality and Copy link became 40px icon buttons on the right with tooltips and screen-reader names, set off by a divider. Status dots glow in their status colour, and the search field widens on focus. The Quality icon is amber on high and grey on low, and Copy link shows a check after copying.
+
+**Why this approach:** The labelled bar wrapped to two rows on a 1280px window and crowded the scene. Rarely used controls don't need visible text, while filters do.
+
+**Why over alternatives:** Visible text stays for anything people will use to narrow down repositories. Icon buttons keep the same accessible names as before, so the existing Playwright lookups ("Quality: high") still match. Icon size is pinned with `[&_svg]` classes because the icons rendered at about half size without it.
+
+**Not yet verified:** Phone-width layout (the bar scrolls sideways there) and the Playwright suite were not run.
+
+## 20. Caretaker with a lamp reads out nearby graves
+
+**What changed:** Replaced `CursorLantern` with `Walker`: a low-poly cloaked figure with a lamp that walks toward the cursor across the ground (eased, turning to face its heading, bobbing while moving, kept inside the cemetery). The lamp carries the warm point light and glow. When a grave is within 3.4 units, a card shows its name, status, a one-line story from the status, its epitaph, last push, language and stars.
+
+**Why this approach:** The floating light had no character. A figure gives the cursor a body and makes proximity, not clicking, the way to learn what happened to a repository. The cards reuse existing status data and epitaphs, so no new data is fetched.
+
+**Why over alternatives:** Built from primitives (cylinder, spheres, cone) rather than loading a model, so there is no asset download and about seven extra draw calls. Nearness is a plain distance check over at most 100 graves each frame, and React state only changes when the nearest grave changes. Hover and click on stones still work as before.
+
+**Known trade-off:** The figure ignores stones and walks through them. Draw call budget tests were not run.
+
+## 21. Keyboard-only caretaker with a follow camera
+
+**What changed:** Removed cursor steering from `Walker`. W A S D (and the arrow keys) walk the caretaker relative to where the camera looks, Shift runs. The first step glides the camera from the overview to a close view behind the figure, and from then on the camera moves with the caretaker while orbit and zoom still work around it. The nearby-grave card now sits beside the figure instead of above it, so the header cannot clip it. Keys are read by physical position (`event.code`), so non-QWERTY layouts work, and they are ignored while typing in the search box.
+
+**Why this approach:** Steering with the cursor fought with orbiting and clicking graves, and the cursor had no way to give a close third-person view. Keyboard walking plus a follow camera is the familiar way to explore a 3D space.
+
+**Why over alternatives:** Translating the camera and orbit target by the caretaker's movement keeps OrbitControls in charge, so no second camera system is needed. A key tapped between frames still moves one step, because automated and very quick taps otherwise never registered.
+
+**Not yet verified:** Draw call budget tests, touch devices (no keyboard, so the caretaker cannot move), and the caretaker still walks through stones.

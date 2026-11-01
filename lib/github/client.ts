@@ -7,19 +7,22 @@ export const MAX_PAGES = 5;
 const TIMEOUT_MS = 8_000;
 
 export interface FetchedRepos {
+  username: string;
   repos: Repo[];
   truncated: boolean;
 }
 
 function requestHeaders(): HeadersInit {
-  const headers: Record<string, string> = {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new GitHubError("not_configured", "Set GITHUB_TOKEN on the server to load your repositories.");
+  }
+  return {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
     "User-Agent": "github-graveyard",
+    Authorization: `Bearer ${token}`,
   };
-  const token = process.env.GITHUB_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
 }
 
 function retryAfterSeconds(response: Response): number | undefined {
@@ -38,15 +41,13 @@ function isRateLimited(response: Response): boolean {
   );
 }
 
-async function fetchPage(username: string, page: number): Promise<unknown[]> {
-  const url =
-    `https://api.github.com/users/${encodeURIComponent(username)}/repos` +
-    `?per_page=${PER_PAGE}&type=owner&sort=pushed&page=${page}`;
+async function fetchJson(url: string): Promise<unknown> {
+  const headers = requestHeaders();
 
   let response: Response;
   try {
     response = await fetch(url, {
-      headers: requestHeaders(),
+      headers,
       cache: "no-store",
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -57,8 +58,8 @@ async function fetchPage(username: string, page: number): Promise<unknown[]> {
     throw new GitHubError("upstream_error", "GitHub could not be reached. Try again in a moment.");
   }
 
-  if (response.status === 404) {
-    throw new GitHubError("not_found", `No GitHub account named ${username} exists.`);
+  if (response.status === 401) {
+    throw new GitHubError("invalid_token", "GitHub rejected GITHUB_TOKEN. Check that it is valid and not expired.");
   }
   if (isRateLimited(response)) {
     throw new GitHubError(
@@ -71,29 +72,44 @@ async function fetchPage(username: string, page: number): Promise<unknown[]> {
     throw new GitHubError("upstream_error", `GitHub returned an error (${response.status}).`);
   }
 
-  let body: unknown;
   try {
-    body = await response.json();
+    return await response.json();
   } catch {
     throw new GitHubError("upstream_error", "GitHub returned a response that could not be read.");
   }
+}
+
+async function fetchLogin(): Promise<string> {
+  const user = (await fetchJson("https://api.github.com/user")) as { login?: unknown } | null;
+  if (typeof user?.login !== "string") {
+    throw new GitHubError("upstream_error", "GitHub returned an unexpected response.");
+  }
+  return user.login;
+}
+
+async function fetchPage(page: number): Promise<unknown[]> {
+  const body = await fetchJson(
+    "https://api.github.com/user/repos" +
+      `?per_page=${PER_PAGE}&affiliation=owner&visibility=all&sort=pushed&page=${page}`,
+  );
   if (!Array.isArray(body)) {
     throw new GitHubError("upstream_error", "GitHub returned an unexpected response.");
   }
   return body;
 }
 
-/** Fetches up to MAX_PAGES pages of public repositories for a validated username. */
-export async function fetchPublicRepos(username: string): Promise<FetchedRepos> {
+/** Fetches up to MAX_PAGES pages of the token owner's repositories, public and private. */
+export async function fetchOwnRepos(): Promise<FetchedRepos> {
+  const username = await fetchLogin();
   const repos: Repo[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
-    const entries = await fetchPage(username, page);
+    const entries = await fetchPage(page);
     for (const entry of entries) {
       const repo = sanitizeRepo(entry);
       if (repo) repos.push(repo);
     }
-    if (entries.length < PER_PAGE) return { repos, truncated: false };
+    if (entries.length < PER_PAGE) return { username, repos, truncated: false };
   }
   // A full last page means more may exist, so the result is reported as truncated.
-  return { repos, truncated: true };
+  return { username, repos, truncated: true };
 }

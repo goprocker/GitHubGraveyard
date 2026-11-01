@@ -1,8 +1,8 @@
 import type { ApiErrorCode } from "../types";
 
 const HTTP_STATUS: Record<ApiErrorCode, number> = {
-  invalid_username: 400,
-  not_found: 404,
+  not_configured: 503,
+  invalid_token: 503,
   rate_limited: 429,
   upstream_error: 502,
   timeout: 504,

@@ -20,6 +20,7 @@ const REPOS = Array.from({ length: 120 }, (_, index) => ({
   pushedAt: iso([3, 60, 200, 900][index % 4] as number),
   archived: index % 10 === 0,
   fork: false,
+  private: index % 3 === 0,
 }));
 
 const skipIntro = async (page: Page) => {
@@ -32,11 +33,11 @@ const drawCalls = (page: Page) =>
 
 test("the 100-grave cap stays within the draw call budgets", async ({ page }) => {
   test.setTimeout(300_000);
-  await page.route("**/api/github/**", (route) =>
+  await page.route("**/api/graveyard**", (route) =>
     route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
-        username: "big",
+        username: "owner",
         repos: REPOS,
         forkCount: 0,
         includeForks: false,
@@ -47,7 +48,7 @@ test("the 100-grave cap stays within the draw call budgets", async ({ page }) =>
     }),
   );
   await page.addInitScript(() => window.localStorage.setItem("graveyard-quality", "high"));
-  await page.goto("/graveyard/big");
+  await page.goto("/graveyard");
   await skipIntro(page);
   await page.waitForTimeout(4000);
   const high = await drawCalls(page);
@@ -64,16 +65,4 @@ test("the 100-grave cap stays within the draw call budgets", async ({ page }) =>
   await expect(page.getByText("top 100 of 120", { exact: false })).toBeHidden();
   await page.getByRole("button", { name: "Show list" }).click();
   await expect(page.getByText("top 100 of 120", { exact: false })).toBeVisible();
-});
-
-test("a real account renders in the scene", async ({ page }) => {
-  test.skip(!OUT, "Calls the real GitHub API, so runs only with SHOT_DIR set");
-  test.setTimeout(180_000);
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/graveyard/octocat");
-  await skipIntro(page);
-  await page.waitForTimeout(3000);
-  await page.screenshot({ path: `${OUT}/octocat.png` });
-  expect(errors).toEqual([]);
 });

@@ -11,6 +11,7 @@ export interface Repo {
   pushedAt: string | null;
   archived: boolean;
   fork: boolean;
+  private: boolean;
 }
 
 export type RepoStatus = "alive" | "forgotten" | "buried" | "ancient" | "archived";
@@ -39,8 +40,8 @@ export interface GraveyardResponse {
 }
 
 export type ApiErrorCode =
-  | "invalid_username"
-  | "not_found"
+  | "not_configured"
+  | "invalid_token"
   | "rate_limited"
   | "upstream_error"
   | "timeout";

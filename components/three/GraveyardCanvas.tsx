@@ -19,6 +19,7 @@ import { GraveGlows } from "./GraveGlows";
 import { GraveStars } from "./GraveStars";
 import { buildLabelAtlas } from "./LabelAtlas";
 import { Particles } from "./Particles";
+import { PathLanterns } from "./PathLanterns";
 import { ResurrectionEffect } from "./ResurrectionEffect";
 import { Scenery } from "./Scenery";
 import { AMBIENT_INTENSITY, KEY_INTENSITY, type SceneState } from "./sceneState";
@@ -26,6 +27,7 @@ import { Sky } from "./Sky";
 import { Terrain } from "./Terrain";
 import { Tombstone } from "./Tombstone";
 import { buildGraveMaterials, buildGraveShapes, buildStarGeometry } from "./TombstoneGeometries";
+import { Walker } from "./Walker";
 import { WebGLBoundary } from "./WebGLBoundary";
 
 const E2E = process.env.NEXT_PUBLIC_E2E === "1";
@@ -37,10 +39,10 @@ function HoverHighlight({ layout, repos }: { layout: CemeteryLayout; repos: read
   if (!grave || !repo) return null;
   return (
     <group position={[grave.x, grave.y, grave.z]}>
-      <pointLight color="#73D7FF" position={[0, 2.4, 2.2]} intensity={5} distance={11} decay={1.6} />
+      <pointLight color="#F2C377" position={[0, 2.4, 2.2]} intensity={5} distance={11} decay={1.6} />
       <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => null}>
         <ringGeometry args={[1.75, 1.9, 48]} />
-        <meshBasicMaterial color="#73D7FF" transparent opacity={0.75} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial color="#F2C377" transparent opacity={0.75} depthWrite={false} toneMapped={false} />
       </mesh>
       <Html position={[0, 3, 0]} center zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
         <div className="slab w-max max-w-64 px-3 py-1.5 text-center">
@@ -168,6 +170,8 @@ function Scene({ username, repos, layout, settings }: SceneProps) {
       <Fog layout={layout} repos={repos} sheets={settings.fogSheets} />
       <Particles layout={layout} count={settings.particles} />
 
+      <PathLanterns layout={layout} />
+      <Walker layout={layout} repos={repos} />
       <GraveGlows layout={layout} repos={repos} />
       <GraveStars graves={starred} geometry={starGeometry} material={materials.star} />
       {repos.map((repo, index) => {

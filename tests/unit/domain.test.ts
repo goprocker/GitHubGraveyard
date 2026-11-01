@@ -1,26 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { calendarDaysSince, classifyRepo } from "@/lib/classify";
-import { buildDemoRepos } from "@/lib/demo-data";
 import { allEpitaphs, epitaphFor } from "@/lib/epitaphs";
 import { enrichRepo, filterRepos, selectRendered } from "@/lib/filter";
 import { CELL_SIZE, GRAVE_FOOTPRINT, generateLayout, generateScenery } from "@/lib/layout";
 import { prestigeForStars } from "@/lib/prestige";
 import { distanceToPath, PATH_HALF_WIDTH } from "@/lib/terrain";
-import { isValidUsername, usernameProblem } from "@/lib/username";
 
 const NOW = new Date("2026-06-15T12:00:00Z");
 const daysAgo = (days: number) => new Date(NOW.getTime() - days * 86_400_000).toISOString();
-
-describe("username", () => {
-  it.each(["a", "octocat", "a-b", "a--b", "trailing-", "x".repeat(39)])("accepts %s", (name) => {
-    expect(isValidUsername(name)).toBe(true);
-  });
-  it.each(["", "-lead", "a/b", "a b", "../x", "x".repeat(40), "a_b"])("rejects %j", (name) => {
-    expect(isValidUsername(name)).toBe(false);
-    expect(usernameProblem(name)).not.toBeNull();
-  });
-});
 
 describe("classification", () => {
   it.each([
@@ -111,7 +99,29 @@ describe("layout", () => {
 });
 
 describe("filtering", () => {
-  const enriched = buildDemoRepos(NOW).map((repo) => enrichRepo(repo, NOW));
+  const repo = (id: number, language: string, days: number, archived = false) => ({
+    id,
+    name: `repo-${id}`,
+    description: null,
+    htmlUrl: null,
+    language,
+    stars: 0,
+    forks: 0,
+    createdAt: daysAgo(3000),
+    updatedAt: daysAgo(days),
+    pushedAt: daysAgo(days),
+    archived,
+    fork: false,
+    private: false,
+  });
+  const enriched = [
+    repo(1, "Rust", 1),
+    repo(2, "Go", 60),
+    repo(3, "Rust", 200),
+    repo(4, "C", 900),
+    repo(5, "C", 900, true),
+    repo(6, "Go", 900, true),
+  ].map((item) => enrichRepo(item, NOW));
 
   it("covers every status in the demo", () => {
     expect(new Set(enriched.map((repo) => repo.status)).size).toBe(5);

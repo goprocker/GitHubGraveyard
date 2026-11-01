@@ -113,7 +113,7 @@ export function Fog({ layout, repos, sheets }: FogProps) {
               map={texture}
               color="#AEBBE0"
               transparent
-              opacity={0.11}
+              opacity={0.17}
               depthWrite={false}
               side={DoubleSide}
             />

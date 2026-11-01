@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-night: #12162b;
-  --color-dusk: #1e2442;
+  --color-night: #0c0f1d;
+  --color-dusk: #171b33;
   --color-moon: #c8d8ff;
-  --color-bone: #f0e6cc;
-  --color-lichen: #a8a58f;
+  --color-bone: #ece4d0;
+  --color-lichen: #9c9b8d;
   --color-lantern: #e8b45a;
-  --color-spectral: #73d7ff;
+  --color-spectral: #e8b45a;
   --font-sans: var(--font-ui);
   --font-serif: var(--font-display);
 }
@@ -20,50 +20,67 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-spectral);
+  outline: 2px solid var(--color-lantern);
   outline-offset: 2px;
 }
 
-/* A slab of dark slate: the one surface used by all floating UI. */
+/* Floating UI surface: dark glass with a single hairline, no heavy frame. */
 .slab {
-  background: rgb(18 22 43 / 0.9);
-  border: 1px solid rgb(168 165 143 / 0.35);
-  border-top: 3px solid rgb(168 165 143 / 0.6);
-  border-radius: 3px;
-  backdrop-filter: blur(6px);
+  background: rgb(12 15 29 / 0.82);
+  border: 1px solid rgb(236 228 208 / 0.12);
+  border-radius: 14px;
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.35);
 }
 
 .control {
   display: inline-flex;
-  min-height: 2.5rem;
+  min-height: 2.25rem;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid rgb(168 165 143 / 0.35);
-  border-radius: 3px;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.925rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgb(236 228 208 / 0.85);
   white-space: nowrap;
   cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .control:hover {
-  border-color: var(--color-spectral);
+  background: rgb(236 228 208 / 0.08);
+  color: var(--color-bone);
 }
 
 .control:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .control[aria-pressed="true"] {
-  background: rgb(200 216 255 / 0.16);
-  border-color: var(--color-moon);
+  background: rgb(232 180 90 / 0.16);
+  border-color: rgb(232 180 90 / 0.55);
+  color: var(--color-bone);
 }
 
-/* Carved lettering: a dark cut with light catching its lower edge. */
-.carved {
-  color: #23263a;
-  text-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
+/* The one filled button: lantern-lit, used for the primary action on a screen. */
+.control-primary {
+  background: var(--color-lantern);
+  color: #1b1405;
+  font-weight: 700;
+}
+
+.control-primary:hover {
+  background: #f1c377;
+  color: #1b1405;
+}
+
+/* Engraved inscription: pale stone letters lit from above. */
+.inscription {
+  color: var(--color-bone);
+  text-shadow: 0 -1px 0 rgb(255 255 255 / 0.25), 0 2px 18px rgb(200 216 255 / 0.25);
 }
 
 .intro-fade {
@@ -72,6 +89,22 @@ body {
 
 .hud-fade {
   transition: opacity 1s ease;
+}
+
+/* The single landing moment: the lantern lights, then the words arrive. */
+.dawn {
+  animation: dawn 1.6s ease-out both;
+}
+
+.dawn-late {
+  animation: dawn 1.6s 0.7s ease-out both;
+}
+
+@keyframes dawn {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
 }
 
 @keyframes intro-fade {
@@ -96,10 +129,13 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .intro-fade,
-  .lantern-sway {
+  .lantern-sway,
+  .dawn,
+  .dawn-late {
     animation: none;
   }
-  .hud-fade {
+  .hud-fade,
+  .control {
     transition: none;
   }
 }

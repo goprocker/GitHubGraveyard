@@ -9,6 +9,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     viewport: { width: 1280, height: 800 },
+    httpCredentials: { username: "owner", password: "e2e-password" },
     launchOptions: {
       args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
     },
@@ -18,6 +19,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     timeout: 240_000,
     reuseExistingServer: false,
-    env: { NEXT_PUBLIC_E2E: "1" },
+    env: { NEXT_PUBLIC_E2E: "1", GRAVEYARD_PASSWORD: "e2e-password" },
   },
 });

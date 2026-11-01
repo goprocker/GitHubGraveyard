@@ -39,5 +39,7 @@ export function sanitizeRepo(raw: unknown): Repo | null {
     pushedAt: isDate(source.pushed_at) ? source.pushed_at : null,
     archived: source.archived === true,
     fork: source.fork === true,
+    // Unknown visibility counts as private, the safer label.
+    private: source.private !== false,
   };
 }

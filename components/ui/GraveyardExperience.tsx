@@ -4,7 +4,6 @@ import { SkipForward } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { buildDemoResponse } from "@/lib/demo-data";
 import { enrichRepo, filterRepos, MAX_RENDERED_GRAVES, selectRendered } from "@/lib/filter";
 import { initialQuality } from "@/lib/quality";
 import { useGraveyard } from "@/lib/store";
@@ -31,9 +30,9 @@ function readWebGLSupport(): boolean {
 }
 const subscribeNever = () => () => {};
 
-async function loadGraveyard(username: string, includeForks: boolean, key: string): Promise<Settled> {
+async function loadGraveyard(includeForks: boolean, key: string): Promise<Settled> {
   try {
-    const response = await fetch(`/api/github/${encodeURIComponent(username)}?includeForks=${includeForks}`);
+    const response = await fetch(`/api/graveyard?includeForks=${includeForks}`);
     const body: unknown = await response.json();
     if (response.ok) return { key, kind: "ok", data: body as GraveyardResponse, now: new Date() };
     const { error } = body as ApiErrorBody;
@@ -64,12 +63,7 @@ function RetryButton({ retryAfter, onRetry }: { retryAfter?: number; onRetry: ()
   );
 }
 
-interface GraveyardExperienceProps {
-  username: string;
-  demo: boolean;
-}
-
-export function GraveyardExperience({ username, demo }: GraveyardExperienceProps) {
+export function GraveyardExperience() {
   const [includeForks, setIncludeForks] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
@@ -93,16 +87,13 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
 
   useEffect(() => {
     let cancelled = false;
-    const request = demo
-      ? Promise.resolve<Settled>({ key, kind: "ok", data: buildDemoResponse(new Date(), includeForks), now: new Date() })
-      : loadGraveyard(username, includeForks, key);
-    void request.then((result) => {
+    void loadGraveyard(includeForks, key).then((result) => {
       if (!cancelled) setSettled(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [demo, username, includeForks, key]);
+  }, [includeForks, key]);
 
   const data = settled?.kind === "ok" ? settled : null;
   const enriched = useMemo(
@@ -143,14 +134,14 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
   const retry = () => setAttempt((value) => value + 1);
 
   if (!settled || (settled.kind === "error" && settled.key !== key)) {
-    return <LoadingSequence username={username} />;
+    return <LoadingSequence />;
   }
 
   if (settled.kind === "error") {
-    if (settled.code === "not_found") {
+    if (settled.code === "not_configured" || settled.code === "invalid_token") {
       return (
-        <StateMessage title="No such account">
-          <p>GitHub has no account named {username}. Check the spelling and try again.</p>
+        <StateMessage title="GitHub token needed" actions={<RetryButton onRetry={retry} />}>
+          <p>{settled.message}</p>
         </StateMessage>
       );
     }
@@ -160,7 +151,7 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
           title="GitHub rate limit reached"
           actions={<RetryButton retryAfter={settled.retryAfter} onRetry={retry} />}
         >
-          <p>This server has used its GitHub requests for now. The demo graveyard still works.</p>
+          <p>This token has used its GitHub requests for now. The button unlocks when the limit resets.</p>
         </StateMessage>
       );
     }
@@ -184,13 +175,13 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
             </button>
           }
         >
-          <p>Every public repository on {username} is a fork, and forks are hidden by default.</p>
+          <p>Every repository on {response.username} is a fork, and forks are hidden by default.</p>
         </StateMessage>
       );
     }
     return (
       <StateMessage title="Nothing buried yet">
-        <p>{username} has no public repositories.</p>
+        <p>{response.username} has no repositories.</p>
       </StateMessage>
     );
   }
@@ -220,7 +211,7 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
       forkCount={response.forkCount}
     />
   );
-  const hud = <Hud username={username} demo={demo} repoCount={enriched.length} stale={response.stale} />;
+  const hud = <Hud username={response.username} repoCount={enriched.length} stale={response.stale} />;
 
   if (!sceneActive) {
     return (
@@ -240,7 +231,7 @@ export function GraveyardExperience({ username, demo }: GraveyardExperienceProps
     <main className="fixed inset-0 overflow-hidden bg-night">
       <div className="intro-fade absolute inset-0">
         <GraveyardCanvas
-          username={demo ? "demo" : username}
+          username={response.username}
           repos={rendered}
           onFailure={() => setSceneFailed(true)}
         />
