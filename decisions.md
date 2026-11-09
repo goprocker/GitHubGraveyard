@@ -224,3 +224,11 @@ A running log of meaningful changes: what changed, why this approach, and why th
 **Why over alternatives:** The `/users/{name}/repos` endpoint only returns public repositories, so private data can't leak whatever token is set. Validating the name first stops path injection into the GitHub URL and saves requests for obvious typos. A capped map keeps memory bounded now that anyone can trigger lookups.
 
 **Known trade-off:** Every visitor shares the token's 5,000 requests per hour. Each lookup costs one request plus one per 100 repositories, and the 10-minute cache softens repeats.
+
+## 24. Per-address rate limit on the API
+
+**What changed:** `lib/rateLimit.ts` allows 30 requests per minute per client address (the first `x-forwarded-for` entry) to `/api/graveyard`. Over the limit, the route returns 429 `rate_limited` with `Retry-After`, which the existing rate-limit screen already shows with a countdown. The landing footer now credits Gopinath instead of listing the stack.
+
+**Why this approach:** Anyone can now trigger GitHub lookups, and they all share one token's 5,000 requests per hour. A per-address cap stops one visitor or script from draining it for everyone.
+
+**Why over alternatives:** An in-memory sliding window needs no extra service. It is per server instance, like the repository cache, so on Vercel the real limit can be higher when several instances run. A shared store such as Upstash Redis would make it exact if abuse becomes a problem.

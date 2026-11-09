@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { excludeForks } from "@/lib/filter";
 import { getRepos } from "@/lib/github/cache";
 import { GitHubError } from "@/lib/github/errors";
+import { checkRateLimit, clientKey } from "@/lib/rateLimit";
 import type { ApiErrorBody, GraveyardResponse } from "@/lib/types";
 
 // Responses can name private repositories, so no shared cache may ever store them.
@@ -18,6 +19,13 @@ function errorResponse(error: GitHubError): NextResponse<ApiErrorBody> {
 }
 
 export async function GET(request: Request): Promise<NextResponse<GraveyardResponse | ApiErrorBody>> {
+  const wait = checkRateLimit(clientKey(request));
+  if (wait > 0) {
+    return errorResponse(
+      new GitHubError("rate_limited", "Too many graveyards opened at once. Try again after the wait below.", wait),
+    );
+  }
+
   const params = new URL(request.url).searchParams;
   const includeForks = params.get("includeForks") === "true";
   const user = params.get("user")?.trim() || undefined;

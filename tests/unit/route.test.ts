@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/api/graveyard/route";
 import { clearCache } from "@/lib/github/cache";
 import { MAX_PAGES } from "@/lib/github/client";
+import { clearRateLimit, MAX_REQUESTS } from "@/lib/rateLimit";
 
 const repo = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
@@ -35,6 +36,7 @@ function github(repos: () => Response | Promise<Response>) {
 
 beforeEach(() => {
   clearCache();
+  clearRateLimit();
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   vi.stubEnv("GITHUB_TOKEN", "secret-token");
@@ -165,5 +167,16 @@ describe("GET /api/graveyard", () => {
     const response = await call("?user=nobody-here");
     expect(response.status).toBe(404);
     expect((await response.json()).error.code).toBe("user_not_found");
+  });
+
+  it("rate limits each client address", async () => {
+    github(() => json([]));
+    const from = (ip: string) =>
+      GET(new Request("http://test/api/graveyard", { headers: { "x-forwarded-for": `${ip}, 10.0.0.1` } }));
+    for (let i = 0; i < MAX_REQUESTS; i++) expect((await from("1.1.1.1")).status).toBe(200);
+    const limited = await from("1.1.1.1");
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect((await from("2.2.2.2")).status).toBe(200);
   });
 });

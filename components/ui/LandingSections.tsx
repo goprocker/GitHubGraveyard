@@ -200,7 +200,12 @@ export function LandingSections() {
           <p className="font-serif text-lg text-bone/60 italic">
             &ldquo;Here lies a side project. It was going to be great.&rdquo;
           </p>
-          <p className="mt-3">Built with Next.js, React Three Fiber and the GitHub API.</p>
+          <p className="mt-3">
+            Made by{" "}
+            <a href="https://github.com/goprocker" className="text-bone/80 underline-offset-4 hover:text-bone hover:underline">
+              Gopinath
+            </a>
+          </p>
         </footer>
       </section>
     </div>

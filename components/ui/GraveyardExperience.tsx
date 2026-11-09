@@ -169,7 +169,7 @@ export function GraveyardExperience() {
           title="GitHub rate limit reached"
           actions={<RetryButton retryAfter={settled.retryAfter} onRetry={retry} />}
         >
-          <p>This token has used its GitHub requests for now. The button unlocks when the limit resets.</p>
+          <p>{settled.message} The button unlocks when the limit resets.</p>
         </StateMessage>
       );
     }
