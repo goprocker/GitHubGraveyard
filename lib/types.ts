@@ -44,7 +44,9 @@ export type ApiErrorCode =
   | "invalid_token"
   | "rate_limited"
   | "upstream_error"
-  | "timeout";
+  | "timeout"
+  | "invalid_username"
+  | "user_not_found";
 
 export interface ApiErrorBody {
   error: {

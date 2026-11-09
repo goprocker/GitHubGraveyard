@@ -1,6 +1,6 @@
 # GitHub Graveyard
 
-A private 3D cemetery of my own GitHub repositories, public and private. Long-untouched repositories become mossy, cracked graves. Starred ones get grander monuments.
+A 3D cemetery of GitHub repositories. Enter any username to see their public repositories, or open the owner's graveyard. Long-untouched repositories become mossy, cracked graves. Starred ones get grander monuments.
 
 ## Setup
 
@@ -22,7 +22,7 @@ Then open http://localhost:3000.
 | Variable | Required | Purpose |
 |---|---|---|
 | `GITHUB_TOKEN` | Yes | Decides whose repositories appear. Read only on the server. |
-| `GRAVEYARD_PASSWORD` | In production | Protects every route. The browser asks for it, and any username works. Production returns 503 if it is unset. |
+| `GRAVEYARD_PASSWORD` | No | Protects every route and shows private repositories too. The browser asks for it, and any username works. When unset, the site is open and shows public repositories only. |
 | `NEXT_PUBLIC_E2E` | No | Tests only. Set by the Playwright config. Leave it unset in production. |
 
 ## How graves are classified
@@ -63,7 +63,7 @@ npm run test:e2e   # Run `npx playwright install chromium` first
 
 ## Limitations
 
-- Only repositories you own, at most 500. Organisation repositories are left out.
+- Only repositories the account owns, at most 500. Organisation repositories are left out. Lookups by username show public repositories only and share the server token's rate limit.
 - Deploy only over HTTPS, because the password gate uses HTTP Basic auth.
 - The 3D scene shows at most 100 graves, chosen by stars and then recent pushes. The list shows every fetched repository.
 - The cache is per server instance, so it resets on restart and isn't shared across instances.
@@ -73,7 +73,7 @@ npm run test:e2e   # Run `npx playwright install chromium` first
 
 ## Deployment
 
-**Vercel:** import the repository and set `GITHUB_TOKEN` and `GRAVEYARD_PASSWORD`.
+**Vercel:** import the repository and set `GITHUB_TOKEN`. Add `GRAVEYARD_PASSWORD` only to show private repositories behind a password.
 
 **Any Node host:**
 

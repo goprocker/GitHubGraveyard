@@ -39,9 +39,9 @@ describe("password gate", () => {
     expect(response.headers.get("www-authenticate")).toContain("Basic");
   });
 
-  it("refuses to serve in production without a password", () => {
+  it("serves openly in production without a password", () => {
     vi.stubEnv("GRAVEYARD_PASSWORD", "");
     vi.stubEnv("NODE_ENV", "production");
-    expect(proxy(request()).status).toBe(503);
+    expect(proxy(request()).status).toBe(200);
   });
 });

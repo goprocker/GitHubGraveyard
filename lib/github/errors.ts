@@ -6,6 +6,8 @@ const HTTP_STATUS: Record<ApiErrorCode, number> = {
   rate_limited: 429,
   upstream_error: 502,
   timeout: 504,
+  invalid_username: 400,
+  user_not_found: 404,
 };
 
 export class GitHubError extends Error {

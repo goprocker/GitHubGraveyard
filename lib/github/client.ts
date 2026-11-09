@@ -41,7 +41,7 @@ function isRateLimited(response: Response): boolean {
   );
 }
 
-async function fetchJson(url: string): Promise<unknown> {
+async function fetchJson(url: string, notFound?: GitHubError): Promise<unknown> {
   const headers = requestHeaders();
 
   let response: Response;
@@ -58,6 +58,7 @@ async function fetchJson(url: string): Promise<unknown> {
     throw new GitHubError("upstream_error", "GitHub could not be reached. Try again in a moment.");
   }
 
+  if (response.status === 404 && notFound) throw notFound;
   if (response.status === 401) {
     throw new GitHubError("invalid_token", "GitHub rejected GITHUB_TOKEN. Check that it is valid and not expired.");
   }
@@ -87,10 +88,21 @@ async function fetchLogin(): Promise<string> {
   return user.login;
 }
 
-async function fetchPage(page: number): Promise<unknown[]> {
+// GitHub logins are 1 to 39 letters, digits or single hyphens, not starting with a hyphen.
+const USERNAME = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+
+export function isValidUsername(value: string): boolean {
+  return USERNAME.test(value);
+}
+
+async function fetchPage(page: number, user?: string): Promise<unknown[]> {
+  // Without a password the site is public, so private repositories must stay hidden.
+  const visibility = process.env.GRAVEYARD_PASSWORD ? "all" : "public";
   const body = await fetchJson(
-    "https://api.github.com/user/repos" +
-      `?per_page=${PER_PAGE}&affiliation=owner&visibility=all&sort=pushed&page=${page}`,
+    user
+      ? `https://api.github.com/users/${user}/repos?per_page=${PER_PAGE}&type=owner&sort=pushed&page=${page}`
+      : "https://api.github.com/user/repos" +
+          `?per_page=${PER_PAGE}&affiliation=owner&visibility=${visibility}&sort=pushed&page=${page}`,
   );
   if (!Array.isArray(body)) {
     throw new GitHubError("upstream_error", "GitHub returned an unexpected response.");
@@ -98,12 +110,27 @@ async function fetchPage(page: number): Promise<unknown[]> {
   return body;
 }
 
-/** Fetches up to MAX_PAGES pages of the token owner's repositories, public and private. */
-export async function fetchOwnRepos(): Promise<FetchedRepos> {
-  const username = await fetchLogin();
+async function fetchUserLogin(user: string): Promise<string> {
+  const notFound = new GitHubError("user_not_found", `No GitHub user called ${user} was found.`);
+  const body = (await fetchJson(`https://api.github.com/users/${user}`, notFound)) as { login?: unknown } | null;
+  if (typeof body?.login !== "string") {
+    throw new GitHubError("upstream_error", "GitHub returned an unexpected response.");
+  }
+  return body.login;
+}
+
+/**
+ * Fetches up to MAX_PAGES pages of repositories. Without `user` these are the token owner's;
+ * with it, that account's public repositories only.
+ */
+export async function fetchOwnRepos(user?: string): Promise<FetchedRepos> {
+  if (user !== undefined && !isValidUsername(user)) {
+    throw new GitHubError("invalid_username", "That isn't a valid GitHub username.");
+  }
+  const username = user === undefined ? await fetchLogin() : await fetchUserLogin(user);
   const repos: Repo[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
-    const entries = await fetchPage(page);
+    const entries = await fetchPage(page, user === undefined ? undefined : username);
     for (const entry of entries) {
       const repo = sanitizeRepo(entry);
       if (repo) repos.push(repo);

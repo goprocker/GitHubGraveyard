@@ -2,6 +2,8 @@
 
 import { SkipForward } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { enrichRepo, filterRepos, MAX_RENDERED_GRAVES, selectRendered } from "@/lib/filter";
@@ -30,9 +32,10 @@ function readWebGLSupport(): boolean {
 }
 const subscribeNever = () => () => {};
 
-async function loadGraveyard(includeForks: boolean, key: string): Promise<Settled> {
+async function loadGraveyard(user: string, includeForks: boolean, key: string): Promise<Settled> {
   try {
-    const response = await fetch(`/api/graveyard?includeForks=${includeForks}`);
+    const userParam = user ? `&user=${encodeURIComponent(user)}` : "";
+    const response = await fetch(`/api/graveyard?includeForks=${includeForks}${userParam}`);
     const body: unknown = await response.json();
     if (response.ok) return { key, kind: "ok", data: body as GraveyardResponse, now: new Date() };
     const { error } = body as ApiErrorBody;
@@ -64,6 +67,7 @@ function RetryButton({ retryAfter, onRetry }: { retryAfter?: number; onRetry: ()
 }
 
 export function GraveyardExperience() {
+  const user = useSearchParams().get("user")?.trim() ?? "";
   const [includeForks, setIncludeForks] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
@@ -77,7 +81,7 @@ export function GraveyardExperience() {
   const introActive = useGraveyard((state) => state.introActive);
   const setMatchingIds = useGraveyard((state) => state.setMatchingIds);
 
-  const key = `${includeForks}:${attempt}`;
+  const key = `${user}:${includeForks}:${attempt}`;
 
   useEffect(() => {
     useGraveyard.getState().reset();
@@ -87,13 +91,13 @@ export function GraveyardExperience() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadGraveyard(includeForks, key).then((result) => {
+    void loadGraveyard(user, includeForks, key).then((result) => {
       if (!cancelled) setSettled(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [includeForks, key]);
+  }, [user, includeForks, key]);
 
   const data = settled?.kind === "ok" ? settled : null;
   const enriched = useMemo(
@@ -138,6 +142,20 @@ export function GraveyardExperience() {
   }
 
   if (settled.kind === "error") {
+    if (settled.code === "invalid_username" || settled.code === "user_not_found") {
+      return (
+        <StateMessage
+          title="No such grave keeper"
+          actions={
+            <Link href="/" className="control">
+              Try another username
+            </Link>
+          }
+        >
+          <p>{settled.message}</p>
+        </StateMessage>
+      );
+    }
     if (settled.code === "not_configured" || settled.code === "invalid_token") {
       return (
         <StateMessage title="GitHub token needed" actions={<RetryButton onRetry={retry} />}>

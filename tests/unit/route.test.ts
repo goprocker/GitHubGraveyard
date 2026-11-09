@@ -77,6 +77,7 @@ describe("GET /api/graveyard", () => {
   });
 
   it("asks for the owner's public and private repositories only", async () => {
+    vi.stubEnv("GRAVEYARD_PASSWORD", "s3cret");
     github(() => json([]));
     await call();
     const urls = fetchMock.mock.calls.map(([input]) => String(input));
@@ -84,6 +85,13 @@ describe("GET /api/graveyard", () => {
     expect(urls[1]).toContain("https://api.github.com/user/repos?");
     expect(urls[1]).toContain("affiliation=owner");
     expect(urls[1]).toContain("visibility=all");
+  });
+
+  it("asks for public repositories only without a password", async () => {
+    vi.stubEnv("GRAVEYARD_PASSWORD", "");
+    github(() => json([]));
+    await call();
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("visibility=public");
   });
 
   it("includes and labels private repositories", async () => {
@@ -131,5 +139,31 @@ describe("GET /api/graveyard", () => {
     expect(without.forkCount).toBe(1);
     expect(withForks.repos).toHaveLength(2);
     expect(fetchMock).toHaveBeenCalledTimes(calls);
+  });
+
+  it("loads another user's public repositories by username", async () => {
+    fetchMock.mockImplementation(async (input) =>
+      String(input).endsWith("/users/Octo-Cat") ? json({ login: "octo-cat" }) : json([repo(1)]),
+    );
+    const body = await (await call("?user=Octo-Cat")).json();
+    expect(body.username).toBe("octo-cat");
+    expect(body.repos).toHaveLength(1);
+    const urls = fetchMock.mock.calls.map(([input]) => String(input));
+    expect(urls[1]).toContain("https://api.github.com/users/octo-cat/repos?");
+    expect(urls[1]).toContain("type=owner");
+  });
+
+  it("rejects invalid usernames without calling GitHub", async () => {
+    for (const user of ["-bad", "a/b", "x".repeat(40), "a--b"]) {
+      expect((await call(`?user=${encodeURIComponent(user)}`)).status).toBe(400);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("reports unknown users as not found", async () => {
+    fetchMock.mockResolvedValue(json({ message: "Not Found" }, { status: 404 }));
+    const response = await call("?user=nobody-here");
+    expect(response.status).toBe(404);
+    expect((await response.json()).error.code).toBe("user_not_found");
   });
 });

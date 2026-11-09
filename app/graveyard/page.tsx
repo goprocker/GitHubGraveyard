@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { GraveyardExperience } from "@/components/ui/GraveyardExperience";
 
 export const metadata: Metadata = {
-  title: "My graveyard | GitHub Graveyard",
-  description: "A private 3D cemetery of my GitHub repositories.",
+  title: "Graveyard | GitHub Graveyard",
+  description: "A 3D cemetery of GitHub repositories.",
 };
 
 export default function GraveyardPage() {
-  return <GraveyardExperience />;
+  return (
+    <Suspense>
+      <GraveyardExperience />
+    </Suspense>
+  );
 }

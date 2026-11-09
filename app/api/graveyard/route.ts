@@ -18,10 +18,12 @@ function errorResponse(error: GitHubError): NextResponse<ApiErrorBody> {
 }
 
 export async function GET(request: Request): Promise<NextResponse<GraveyardResponse | ApiErrorBody>> {
-  const includeForks = new URL(request.url).searchParams.get("includeForks") === "true";
+  const params = new URL(request.url).searchParams;
+  const includeForks = params.get("includeForks") === "true";
+  const user = params.get("user")?.trim() || undefined;
 
   try {
-    const { username, repos, truncated, fetchedAt, stale } = await getRepos();
+    const { username, repos, truncated, fetchedAt, stale } = await getRepos(user);
     const body: GraveyardResponse = {
       username,
       repos: includeForks ? repos : excludeForks(repos),

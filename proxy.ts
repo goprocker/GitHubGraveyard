@@ -8,13 +8,10 @@ function safeEqual(a: string, b: string): boolean {
   return difference === 0;
 }
 
-/** Private repository names are served here, so every route requires the owner's password. */
+/** With a password set, private repository names are served, so every route requires it. Without one, only public repositories are fetched and the site is open. */
 export function proxy(request: NextRequest) {
   const password = process.env.GRAVEYARD_PASSWORD;
-  if (!password) {
-    if (process.env.NODE_ENV !== "production") return NextResponse.next();
-    return new NextResponse("Set GRAVEYARD_PASSWORD to serve this site.", { status: 503 });
-  }
+  if (!password) return NextResponse.next();
 
   const [scheme, encoded] = (request.headers.get("authorization") ?? "").split(" ");
   if (scheme === "Basic" && encoded) {

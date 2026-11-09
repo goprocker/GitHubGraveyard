@@ -206,3 +206,21 @@ A running log of meaningful changes: what changed, why this approach, and why th
 **Why over alternatives:** Translating the camera and orbit target by the caretaker's movement keeps OrbitControls in charge, so no second camera system is needed. A key tapped between frames still moves one step, because automated and very quick taps otherwise never registered.
 
 **Not yet verified:** Draw call budget tests, touch devices (no keyboard, so the caretaker cannot move), and the caretaker still walks through stones.
+
+## 22. Optional password, public repositories only without it
+
+**What changed:** `proxy.ts` no longer returns 503 in production when `GRAVEYARD_PASSWORD` is unset; the site is served openly. In that case `lib/github/client.ts` asks GitHub for `visibility=public` instead of `visibility=all`, so private repositories are never fetched. With a password set, behaviour is unchanged.
+
+**Why this approach:** The owner wants to deploy the graveyard publicly on Vercel without a password, while keeping private repository names hidden.
+
+**Why over alternatives:** Tying visibility to whether a password exists keeps one switch: a private gated site shows everything, an open site shows only public work. Filtering at the GitHub request means private data never reaches the server cache or the browser.
+
+## 23. Look up any GitHub user's graveyard
+
+**What changed:** The landing page now has a username box. Submitting goes to `/graveyard?user=<name>`, and `/api/graveyard?user=<name>` fetches that account's public repositories from `/users/{name}/repos?type=owner`. Without `user`, the token owner's graveyard loads as before, through a smaller link. Usernames are checked against GitHub's login rules before any request, unknown users return 404 `user_not_found`, and the page shows a "Try another username" message for both. The cache is now a map keyed by lowercased username, capped at 200 entries, with one in-flight request per user.
+
+**Why this approach:** The site is public, so visitors want to see their own graveyard, not only the owner's. The server token is still used for these lookups, which raises the GitHub rate limit from 60 to 5,000 requests an hour.
+
+**Why over alternatives:** The `/users/{name}/repos` endpoint only returns public repositories, so private data can't leak whatever token is set. Validating the name first stops path injection into the GitHub URL and saves requests for obvious typos. A capped map keeps memory bounded now that anyone can trigger lookups.
+
+**Known trade-off:** Every visitor shares the token's 5,000 requests per hour. Each lookup costs one request plus one per 100 repositories, and the 10-minute cache softens repeats.

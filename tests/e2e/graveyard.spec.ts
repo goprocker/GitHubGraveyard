@@ -46,8 +46,16 @@ async function skipIntro(page: Page) {
 test("landing opens the graveyard", async ({ page }) => {
   await mockApi(page, 200, response(REPOS));
   await page.goto("/");
-  await page.getByRole("link", { name: "Open the gates" }).click();
+  await page.getByRole("link", { name: "Or visit the owner's graveyard" }).click();
   await expect(page).toHaveURL(/\/graveyard$/);
+});
+
+test("landing opens any user's graveyard", async ({ page }) => {
+  await mockApi(page, 200, response(REPOS));
+  await page.goto("/");
+  await page.getByLabel("GitHub username").fill("@octocat");
+  await page.getByRole("button", { name: "Open the gates" }).click();
+  await expect(page).toHaveURL(/\/graveyard\?user=octocat$/);
 });
 
 test("every route requires the password", async ({ browser, baseURL }) => {
