@@ -68,7 +68,7 @@ npm run test:e2e   # Run `npx playwright install chromium` first
 - The 3D scene shows at most 100 graves, chosen by stars and then recent pushes. The list shows every fetched repository.
 - The cache is per server instance, so it resets on restart and isn't shared across instances.
 - The password gate has no lockout after failed attempts, so use a long password.
-- The API allows 30 requests per minute per address. The count lives in each server instance's memory, so it is approximate when several instances run.
+- The API allows 10 requests per minute per address. The count lives in each server instance's memory, so it is approximate when several instances run.
 - Demo Resurrection is only a visual effect for the current visit. It changes nothing on GitHub and doesn't detect real revivals.
 - Frame rate hasn't been measured on real GPUs. Automated tests use software rendering.
 

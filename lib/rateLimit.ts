@@ -1,5 +1,5 @@
 const WINDOW_MS = 60_000;
-export const MAX_REQUESTS = 30;
+export const MAX_REQUESTS = 10;
 // Bounds memory when many different addresses arrive at once.
 const MAX_CLIENTS = 10_000;
 

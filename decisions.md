@@ -227,7 +227,7 @@ A running log of meaningful changes: what changed, why this approach, and why th
 
 ## 24. Per-address rate limit on the API
 
-**What changed:** `lib/rateLimit.ts` allows 30 requests per minute per client address (the first `x-forwarded-for` entry) to `/api/graveyard`. Over the limit, the route returns 429 `rate_limited` with `Retry-After`, which the existing rate-limit screen already shows with a countdown. The landing footer now credits Gopinath instead of listing the stack.
+**What changed:** `lib/rateLimit.ts` allows 10 requests per minute per client address (the first `x-forwarded-for` entry) to `/api/graveyard`. Over the limit, the route returns 429 `rate_limited` with `Retry-After`, which the existing rate-limit screen already shows with a countdown. The landing footer now credits Gopinath instead of listing the stack.
 
 **Why this approach:** Anyone can now trigger GitHub lookups, and they all share one token's 5,000 requests per hour. A per-address cap stops one visitor or script from draining it for everyone.
 
