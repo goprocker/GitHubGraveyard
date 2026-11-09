@@ -1,8 +1,11 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+const EXAMPLES = ["octocat", "torvalds", "gaearon"];
 
 export function LandingForm() {
   const router = useRouter();
@@ -12,22 +15,30 @@ export function LandingForm() {
     void import("@/components/three/GraveyardCanvas");
   };
 
-  const visit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const user = username.trim().replace(/^@/, "");
+  const open = (name: string) => {
+    const user = name.trim().replace(/^@/, "");
     if (user) router.push(`/graveyard?user=${encodeURIComponent(user)}`);
   };
 
   return (
-    <div className="relative z-10 flex w-full max-w-5xl flex-col items-start px-6 pb-44 sm:px-12 sm:pb-52">
-      <p className="dawn-late text-base text-lichen">GitHub Graveyard</p>
-      <h1 className="dawn inscription mt-3 max-w-[14ch] font-serif text-6xl leading-[0.95] italic sm:text-8xl lg:text-9xl">
+    <div className="relative z-10 flex w-full max-w-3xl flex-col items-center px-4 pb-40 text-center sm:pb-48">
+      <p className="dawn-late text-sm tracking-[0.3em] text-lichen uppercase">GitHub Graveyard</p>
+      <h1 className="dawn inscription mt-4 font-serif text-5xl leading-[1.02] italic sm:text-7xl">
         Here lies everything you meant to finish.
       </h1>
-      <p className="dawn-late mt-6 max-w-md text-lg leading-relaxed text-bone/80">
-        Enter any GitHub username to see their public repositories laid to rest by how long ago they were last pushed to.
+      <p className="dawn-late mt-5 max-w-lg text-lg leading-relaxed text-bone/80">
+        Enter a GitHub username and walk through their public repositories, each laid to rest by how long ago it was
+        last pushed to.
       </p>
-      <form onSubmit={visit} className="dawn-late mt-8 flex w-full max-w-md flex-wrap gap-2">
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          open(username);
+        }}
+        className="slab dawn-late mt-9 flex w-full max-w-xl items-center gap-2 rounded-full! p-1.5 pl-5 focus-within:border-lantern/60"
+      >
+        <Search aria-hidden="true" size={20} className="shrink-0 text-lichen" />
         <label htmlFor="github-user" className="sr-only">
           GitHub username
         </label>
@@ -41,13 +52,28 @@ export function LandingForm() {
           autoCapitalize="off"
           spellCheck={false}
           maxLength={40}
-          className="control min-h-12 min-w-0 flex-1 px-4 text-lg"
+          className="min-w-0 flex-1 bg-transparent py-2 text-lg text-bone placeholder:text-lichen/70 focus:outline-none"
         />
-        <button type="submit" disabled={!username.trim()} className="control control-primary min-h-12 px-7 text-lg">
+        <button type="submit" disabled={!username.trim()} className="control control-primary min-h-11 shrink-0 px-6 text-base">
           Open the gates
         </button>
       </form>
-      <Link href="/graveyard" onPointerEnter={prefetchScene} className="dawn-late mt-4 text-bone/70 underline">
+
+      <div className="dawn-late mt-4 flex flex-wrap items-center justify-center gap-2 text-sm text-lichen">
+        <span>Try</span>
+        {EXAMPLES.map((name) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => open(name)}
+            className="control border-bone/15! min-h-8 px-3 text-sm"
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+
+      <Link href="/graveyard" onPointerEnter={prefetchScene} className="dawn-late mt-6 text-sm text-bone/60 underline-offset-4 hover:text-bone hover:underline">
         Or visit the owner&apos;s graveyard
       </Link>
     </div>
