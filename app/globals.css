@@ -298,6 +298,34 @@ body {
   }
 }
 
+/* Warm lantern light that follows the cursor on the landing page. */
+.lantern-light {
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(232 180 90 / 0.22) 0%,
+    rgb(232 180 90 / 0.1) 25%,
+    rgb(232 180 90 / 0.03) 50%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  animation: lantern-flicker 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes lantern-flicker {
+  40% {
+    opacity: 0.85;
+  }
+  60% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+}
+
 /* Sections rise out of the dark as they scroll in, where the browser supports it. */
 @supports (animation-timeline: view()) {
   .reveal {

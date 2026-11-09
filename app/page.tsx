@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { LandingBackdrop } from "@/components/ui/LandingBackdrop";
 import { LandingForm } from "@/components/ui/LandingForm";
 import { LandingSections } from "@/components/ui/LandingSections";
+import { LanternCursor } from "@/components/ui/LanternCursor";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
         </a>
       </section>
       <LandingSections />
+      <LanternCursor />
     </main>
   );
 }

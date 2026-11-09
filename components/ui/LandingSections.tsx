@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 
+import type { PrestigeTier } from "@/lib/types";
+
+import { RealStone, StoneCanvasMount } from "./LandingStones";
+
 type Stage = "alive" | "forgotten" | "buried" | "ancient" | "archived";
 
 const STAGES: { stage: Stage; label: string; days: string; epitaph: string }[] = [
@@ -81,40 +85,12 @@ function Headstone({ stage }: { stage: Stage }) {
   );
 }
 
-const MARKERS = [
-  { stars: "0 to 4 stars", name: "Gravestone" },
-  { stars: "5 to 19 stars", name: "Decorative cross" },
-  { stars: "20 to 99 stars", name: "Elaborate obelisk" },
-  { stars: "100+ stars", name: "Monument" },
+const MARKERS: { tier: PrestigeTier; stars: string; name: string }[] = [
+  { tier: "basic", stars: "0 to 4 stars", name: "Gravestone" },
+  { tier: "decorative", stars: "5 to 19 stars", name: "Decorative" },
+  { tier: "elaborate", stars: "20 to 99 stars", name: "Elaborate" },
+  { tier: "monument", stars: "100+ stars", name: "Monument" },
 ];
-
-/** The four marker sizes side by side on one plot of ground. */
-function MarkerRow() {
-  const stone = "#7d8296";
-  const edge = "#1a1e33";
-  return (
-    <svg viewBox="0 0 880 300" className="w-full" aria-hidden="true">
-      <path d="M0 262 C200 250 680 252 880 262 V300 H0Z" fill="#141933" />
-      <g stroke={edge} strokeWidth="3" fill={stone}>
-        <path d="M80 262v-70a30 30 0 0 1 60 0v70z" />
-        <path d="M305 262v-22h-20v-12h70v12h-20v22z" />
-        <path d="M310 228v-58h-24v-18h24v-26h20v26h24v18h-24v58z" />
-        <path d="M520 262v-16h-14v-14h88v14h-14v16z" />
-        <path d="M528 232l8-150 14-20 14 20 8 150z" />
-        <path d="M650 262v-14h200v14z" />
-        <path d="M664 248v-18h172v18z" />
-        <path d="M676 230v-96h148v96z" />
-        <path d="M664 134l86-62 86 62z" />
-        <path d="M698 230v-80M726 230v-80M774 230v-80M802 230v-80" fill="none" strokeWidth="5" />
-        <path d="M736 230v-54a14 14 0 0 1 28 0v54z" fill="#262a40" />
-      </g>
-      <circle cx="750" cy="108" r="7" fill="#e8b45a" />
-      <g fill="#e8b45a">
-        <path d="M550 50l3 7 7 .5-5.5 4.5 2 7-6.5-4-6.5 4 2-7-5.5-4.5 7-.5z" />
-      </g>
-    </svg>
-  );
-}
 
 function Reveal({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`reveal ${className}`}>{children}</div>;
@@ -130,19 +106,20 @@ export function LandingSections() {
   return (
     <div className="relative bg-[linear-gradient(#0e1126,#0c0f1d_30%)]">
       <div aria-hidden="true" className="fog pointer-events-none absolute inset-x-0 top-0 h-64" />
+      <StoneCanvasMount />
 
       <section id="rites" className="relative mx-auto max-w-6xl scroll-mt-8 px-4 py-24 sm:px-8">
         <Reveal className="text-center">
           <p className="text-sm tracking-[0.3em] text-lichen uppercase">The rites</p>
           <h2 className="inscription mt-3 font-serif text-4xl italic sm:text-6xl">How a repository is laid to rest</h2>
           <p className="mx-auto mt-4 max-w-xl text-bone/70">
-            Every grave ages from the day of its last push. Leave a project alone long enough and nature takes it back.
+            These are the graveyard&apos;s own stones, rendered live. Each one ages from the day of its last push.
           </p>
         </Reveal>
         <div className="mt-16 grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 lg:grid-cols-5">
           {STAGES.map(({ stage, label, days, epitaph }) => (
             <Reveal key={stage} className="flex flex-col items-center text-center">
-              <Headstone stage={stage} />
+              <RealStone tier="basic" status={stage} className="h-56 w-full" fallback={<Headstone stage={stage} />} />
               <h3 className="mt-4 font-serif text-2xl text-bone">{label}</h3>
               <p className="mt-1 text-sm font-medium text-lantern/90">{days}</p>
               <p className="mt-2 max-w-[18ch] text-sm text-lichen italic">{epitaph}</p>
@@ -156,20 +133,23 @@ export function LandingSections() {
           <p className="text-sm tracking-[0.3em] text-lichen uppercase">The plots</p>
           <h2 className="inscription mt-3 font-serif text-4xl italic sm:text-6xl">Stars buy grander stones</h2>
           <p className="mx-auto mt-4 max-w-xl text-bone/70">
-            A forgotten script gets a humble slab. A repository the world starred gets a mausoleum it can be proud of.
+            A forgotten script gets a humble slab. A repository the world starred gets an obelisk it can be proud of. Move your cursor to turn them.
           </p>
         </Reveal>
-        <Reveal className="mt-14">
-          <MarkerRow />
-          <div className="mt-4 grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-            {MARKERS.map(({ stars, name }) => (
-              <div key={name}>
-                <p className="font-serif text-xl text-bone">{name}</p>
-                <p className="text-sm text-lichen">{stars}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-10 text-center sm:grid-cols-4">
+          {MARKERS.map(({ tier, stars, name }) => (
+            <Reveal key={tier}>
+              <RealStone
+                tier={tier}
+                status="alive"
+                className="h-64 w-full sm:h-72"
+                fallback={<Headstone stage="alive" />}
+              />
+              <p className="mt-2 font-serif text-xl text-bone">{name}</p>
+              <p className="text-sm text-lichen">{stars}</p>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       <section className="relative mx-auto max-w-5xl px-4 py-24 sm:px-8">
