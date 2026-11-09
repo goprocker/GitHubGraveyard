@@ -21,7 +21,7 @@ export function LandingForm() {
   };
 
   return (
-    <div className="relative z-10 flex w-full max-w-3xl flex-col items-center px-4 pb-40 text-center sm:pb-48">
+    <div className="relative z-10 flex w-full max-w-3xl flex-col items-center px-4 pb-44 text-center sm:pb-52">
       <p className="dawn-late text-sm tracking-[0.3em] text-lichen uppercase">GitHub Graveyard</p>
       <h1 className="dawn inscription mt-4 font-serif text-5xl leading-[1.02] italic sm:text-7xl">
         Here lies everything you meant to finish.

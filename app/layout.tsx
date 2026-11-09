@@ -17,7 +17,7 @@ const ui = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   title: "GitHub Graveyard",
-  description: "A private 3D cemetery of my GitHub repositories.",
+  description: "A 3D cemetery for any GitHub account. Old repositories become mossy, cracked graves.",
   robots: { index: false, follow: false },
 };
 

@@ -12,6 +12,10 @@
   --font-serif: var(--font-display);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   background: var(--color-night);
@@ -127,7 +131,54 @@ body {
   animation: lantern-sway 1.6s ease-in-out infinite alternate;
 }
 
+/* Low mist rolling off the hillside into the sections below. */
+.fog {
+  background:
+    radial-gradient(ellipse 40% 60% at 20% 0%, rgb(200 216 255 / 0.07), transparent 70%),
+    radial-gradient(ellipse 50% 70% at 75% 10%, rgb(200 216 255 / 0.06), transparent 70%);
+  animation: fog-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes fog-drift {
+  to {
+    transform: translateX(4%);
+  }
+}
+
+.drift {
+  animation: drift 1.8s ease-in-out infinite;
+}
+
+@keyframes drift {
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* Sections rise out of the dark as they scroll in, where the browser supports it. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(4px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fog,
+  .drift,
+  .reveal,
   .intro-fade,
   .lantern-sway,
   .dawn,
